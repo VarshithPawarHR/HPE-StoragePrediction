@@ -136,7 +136,7 @@ Files Modified: {files_modified} ({round(size_modified / (1024 ** 3), 5)} GB)
 
 def main():
     mongo_uri = "mongodb+srv://hpecpp:zz14OLIaQG7sC3cL@cluster0.nuoab.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-    directories = ['/data', '/scratch', '/projects', '/user']
+    directories = ['/info', '/scratch', '/projects', '/customers']
 
     collector = StorageMetricsCollector(mongo_uri, directories)
     

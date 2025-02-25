@@ -319,7 +319,7 @@ class StorageSimulator:
 if __name__ == "__main__":
     mount_points_config = [
         {
-            'path': '/user',
+            'path': '/customers',
             'num_workers': 2,
             'size_cap': 2.5 * 1024 * 1024 * 1024 * 1024,  # 2.5TB
             'operation_weights': {'create': 0.4, 'update': 0.4, 'delete': 0.2},  # Balanced operations
@@ -334,6 +334,8 @@ if __name__ == "__main__":
             'delete_delay_min': 30,
             'delete_delay_max': 60
         },
+        
+       
         {
             'path': '/scratch',
             'num_workers': 3,
@@ -367,7 +369,7 @@ if __name__ == "__main__":
             'delete_delay_max': 240
         },
         {
-            'path': '/data',
+            'path': '/info',
             'num_workers': 2,  # Increased workers for higher frequency
             'size_cap': 2.5 * 1024 * 1024 * 1024 * 1024,  # 2.5TB
             'operation_weights': {'create': 0.4, 'update': 0.4, 'delete': 0.2},
@@ -393,10 +395,10 @@ if __name__ == "__main__":
             print(f"{config['path']}: {config['size_cap'] / (1024**4):.1f}TB")
         
         print("\nFile generation frequencies:")
-        print("/user: 30-60 seconds")
+        print("/customers: 30-60 seconds")
         print("/scratch: 2-3 minutes")
         print("/projects: 4 minutes")
-        print("/data: 1 minute")
+        print("/info: 1 minute")
         
         simulator.start()
         

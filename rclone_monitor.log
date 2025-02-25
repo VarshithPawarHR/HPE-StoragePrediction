@@ -1,0 +1,20 @@
+2025-02-25 22:42:05,702 - INFO - Mounting gdrive:/user to /user
+2025-02-25 22:42:17,795 - INFO - Mounting gdrive:/user to /user
+2025-02-25 22:43:27,727 - INFO - Mounting gdrive:/user to /user
+2025-02-25 22:44:39,178 - ERROR - Failed to mount /user
+2025-02-25 22:44:39,179 - INFO - Mounting gdrive:/scratch to /scratch
+2025-02-25 22:44:45,062 - INFO - Successfully mounted /scratch
+2025-02-25 22:44:45,062 - INFO - Mounting gdrive:/projects to /projects
+2025-02-25 22:44:51,121 - INFO - Successfully mounted /projects
+2025-02-25 22:44:51,121 - INFO - Mounting gdrive:/data to /data
+2025-02-25 22:44:58,016 - INFO - Successfully mounted /data
+2025-02-25 22:44:58,016 - WARNING - /user is unmounted. Remounting...
+2025-02-25 22:44:58,016 - INFO - Mounting gdrive:/user to /user
+2025-02-25 22:46:02,210 - ERROR - Failed to mount /user
+2025-02-25 22:46:33,258 - WARNING - /user is unmounted. Remounting...
+2025-02-25 22:46:33,258 - INFO - Mounting gdrive:/user to /user
+2025-02-25 22:47:37,959 - ERROR - Failed to mount /user
+2025-02-25 22:48:07,963 - WARNING - /user is unmounted. Remounting...
+2025-02-25 22:48:07,963 - INFO - Mounting gdrive:/user to /user
+2025-02-25 22:49:56,349 - INFO - Mounting gdrive:/user to /user
+2025-02-25 22:51:00,588 - ERROR - Failed to mount /user
