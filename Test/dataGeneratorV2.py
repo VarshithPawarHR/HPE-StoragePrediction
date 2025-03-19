@@ -13,8 +13,8 @@ db = client["StorageMonitoring"]
 # ✅ Directories and their dynamic storage limits
 storage_limits = {
     "customers": (1000, 2500),  # 1TB - 2.5TB
-    "info": (1000, 2500),  # 500GB - 1.25TB
-    "projects": (1000, 2500),  # 500GB - 1TB
+    "info": (500, 1250),  # 500GB - 1.25TB
+    "projects": (500, 1000),  # 500GB - 1TB
     "scratch": (500, 2000)  # 500GB - 2TB
 }
 
@@ -36,23 +36,15 @@ def get_last_timestamp(collection):
 
 
 def generate_synthetic_data(directory, last_space, timestamp):
-    """Generate smooth synthetic data with realistic increases/decreases."""
+    """Generate smooth synthetic data for each directory with dynamic fluctuations."""
     min_storage, max_storage = storage_limits[directory]
 
-    # ✅ Gradual trend factor (small increase/decrease over time)
-    trend_factor = random.uniform(2, 8)  # Small, steady growth
-
-    # ✅ Small random fluctuation (prevents a perfect straight line)
-    noise_factor = random.uniform(-10, 10)  # Keeps variations subtle
-
-    # ✅ Compute new storage space naturally
-    new_space = last_space + trend_factor + noise_factor
-
-    # ✅ Ensure new storage space remains within limits
-    new_space = max(min_storage, min(max_storage, new_space))
+    # ✅ Introduce a gradual fluctuation factor based on time
+    fluctuation_factor = random.uniform(-50, 50)
+    new_space = max(min_storage, min(max_storage, last_space + fluctuation_factor))
 
     data = {
-        "Timestamp": timestamp,
+        "Timestamp": timestamp,  # ✅ Store as datetime object, not string
         "Directory": f"/{directory}",
         "Files Added (GB)": random.uniform(0, 5),
         "Files Deleted (GB)": random.uniform(0, 5),
@@ -107,5 +99,3 @@ def update_database():
 while True:
     update_database()
     time.sleep(900)  # 900 seconds = 15 minutes
-
-
