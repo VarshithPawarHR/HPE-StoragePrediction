@@ -70,7 +70,7 @@
       <option name="presentableId" value="Default" />
       <updated>1742050971773</updated>
       <workItem from="1742050972877" duration="129000" />
-      <workItem from="1742370007129" duration="2130000" />
+      <workItem from="1742370007129" duration="7642000" />
     </task>
     <servers />
   </component>
@@ -78,7 +78,7 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/HPE_StoragePrediction$dataGenerator.coverage" NAME="dataGenerator Coverage Results" MODIFIED="1742372485297" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/HPE_StoragePrediction$dataGenerator.coverage" NAME="dataGenerator Coverage Results" MODIFIED="1742378564456" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/HPE_StoragePrediction$script.coverage" NAME="script Coverage Results" MODIFIED="1742050994468" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
