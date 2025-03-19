@@ -64,6 +64,9 @@ def update_database():
             collection.insert_one(new_data)
             logging.info(f"Inserted new record for {directory}: {new_data}")
 
+            # Remove '_id' field before saving to CSV
+            new_data.pop("_id", None)
+
             # Append to the correct CSV file for each directory
             csv_filename = f"{directory}.csv"
             df = pd.DataFrame([new_data])
