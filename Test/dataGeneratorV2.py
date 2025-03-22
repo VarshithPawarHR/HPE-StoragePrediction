@@ -12,7 +12,7 @@ db = client["StorageMonitoring"]
 
 # ✅ Directories and their dynamic storage limits
 storage_limits = {
-    "customers": (1000, 2500),  # 1TB - 2.5TB
+    "customers": (500, 1800),  # 1TB - 2.5TB
     "info": (500, 1250),  # 500GB - 1.25TB
     "projects": (500, 1000),  # 500GB - 1TB
     "scratch": (500, 2000)  # 500GB - 2TB
@@ -40,7 +40,7 @@ def generate_synthetic_data(directory, last_space, timestamp):
     min_storage, max_storage = storage_limits[directory]
 
     # ✅ Introduce a gradual fluctuation factor based on time
-    fluctuation_factor = random.uniform(-50, 50)
+    fluctuation_factor = random.uniform(-20, 20)
     new_space = max(min_storage, min(max_storage, last_space + fluctuation_factor))
 
     data = {

@@ -6,9 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="58118771-7695-4599-aba4-c9664aa61f8b" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Collab/Varshith_collab/Varshith_collab.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Collab/Varshith_collab/Varshith_collab.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Collab/Varshith_collab/storageMonitor.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Collab/Varshith_collab/storageMonitor.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/customers.csv" beforeDir="false" afterPath="$PROJECT_DIR$/Test/customers.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/dataGenerator.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/dataGenerator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test/dataGeneratorV2.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/dataGeneratorV2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/info.csv" beforeDir="false" afterPath="$PROJECT_DIR$/Test/info.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Test/log.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/projects.csv" beforeDir="false" afterPath="$PROJECT_DIR$/Test/projects.csv" afterDir="false" />
@@ -37,23 +39,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.dataGenerator.executor": "Run",
-    "Python.script.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "D:/Projects/HPE-StoragePrediction",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.dataGenerator.executor&quot;: &quot;Run&quot;,
+    &quot;Python.dataGeneratorV2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.script.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Projects/HPE-StoragePrediction&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -71,7 +74,10 @@
       <option name="presentableId" value="Default" />
       <updated>1742050971773</updated>
       <workItem from="1742050972877" duration="129000" />
-      <workItem from="1742370007129" duration="16494000" />
+      <workItem from="1742370007129" duration="17716000" />
+      <workItem from="1742460422373" duration="815000" />
+      <workItem from="1742480020838" duration="3865000" />
+      <workItem from="1742633985018" duration="3815000" />
     </task>
     <servers />
   </component>
@@ -80,6 +86,8 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/HPE_StoragePrediction$dataGenerator.coverage" NAME="dataGenerator Coverage Results" MODIFIED="1742396064640" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/dataGenerator_py$dataGenerator.coverage" NAME="dataGenerator Coverage Results" MODIFIED="1742460973721" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/HPE_StoragePrediction$script.coverage" NAME="script Coverage Results" MODIFIED="1742050994468" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/dataGeneratorV2_py$dataGeneratorV2.coverage" NAME="dataGeneratorV2 Coverage Results" MODIFIED="1742634096999" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
   </component>
 </project>
