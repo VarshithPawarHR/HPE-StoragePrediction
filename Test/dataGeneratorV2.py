@@ -12,10 +12,10 @@ db = client["StorageMonitoring"]
 
 # ✅ Directories and their dynamic storage limits
 storage_limits = {
-    "customers": (500, 1800),  # 1TB - 2.5TB
-    "info": (500, 1250),  # 500GB - 1.25TB
-    "projects": (500, 1000),  # 500GB - 1TB
-    "scratch": (500, 2000)  # 500GB - 2TB
+    "customers": (500, 2500),  # 1TB - 2.5TB
+    "info": (500, 2000),  # 500GB - 1.25TB
+    "projects": (500, 1900),  # 500GB - 1TB
+    "scratch": (500, 2500)  # 500GB - 2TB
 }
 
 # ✅ Logging setup
