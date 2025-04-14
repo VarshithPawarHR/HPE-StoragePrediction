@@ -6,11 +6,10 @@ import time
 import os
 from dotenv import load_dotenv
 
-# ------------------ Load Secrets from .env ------------------
+# ------------------ MongoDB Setup ------------------
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 
-# ------------------ MongoDB Setup ------------------
 client = MongoClient(MONGO_URI)
 db = client["storage_simulation"]
 collection = db["usage_logs"]
@@ -40,25 +39,29 @@ def generate_value(prev_val, cfg):
     delta = new_val - prev_val
     return new_val, round(max(delta, 0), 2), round(max(-delta, 0), 2), round(abs(delta), 2)
 
-def generate_and_insert(directory, cfg, start_ts, end_ts, prev_val):
+def generate_and_bulk_insert(directory, cfg, start_ts, end_ts, prev_val):
     timestamps = pd.date_range(start=start_ts, end=end_ts, freq="15min")
+    docs = []
     for ts in timestamps:
         current, added, deleted, updated = generate_value(prev_val, cfg)
-        doc = {
+        docs.append({
             "timestamp": ts,
             "directory": directory,
             "storage_gb": current,
             "added_gb": added,
             "deleted_gb": deleted,
             "updated_gb": updated
-        }
-        collection.insert_one(doc)
+        })
         prev_val = current
-    return prev_val
+    if docs:
+        collection.insert_many(docs)
+        return prev_val, timestamps[-1]
+    return prev_val, start_ts - timedelta(minutes=15)
 
 # ------------------ Main Loop ------------------
 def live_data_insertion_loop():
     last_vals = {}
+    latest_timestamps = {}
 
     print("🔁 Backfilling missing data from last known timestamps...")
     now = datetime.now().replace(second=0, microsecond=0)
@@ -67,9 +70,34 @@ def live_data_insertion_loop():
         last_ts = get_last_timestamp(directory)
         prev_val_doc = collection.find({"directory": directory, "timestamp": last_ts}).limit(1)
         prev_val = next(prev_val_doc, {"storage_gb": cfg["base"]})["storage_gb"]
-        last_vals[directory] = generate_and_insert(directory, cfg, last_ts + timedelta(minutes=15), now, prev_val)
 
-    print("✅ Backfill complete. Entering live insertion mode (every 15 minutes)...")
+        start_ts = last_ts + timedelta(minutes=15)
+        if start_ts <= now:
+            new_prev_val, final_backfill_ts = generate_and_bulk_insert(
+                directory, cfg, start_ts, now, prev_val
+            )
+            last_vals[directory] = new_prev_val
+            latest_timestamps[directory] = final_backfill_ts
+        else:
+            print(f"🟡 No backfill needed for {directory}. Already up to date.")
+            last_vals[directory] = prev_val
+            latest_timestamps[directory] = last_ts
+
+    print("✅ Backfill complete.")
+
+    # Determine next 15-minute slot for live mode
+    now = datetime.now().replace(second=0, microsecond=0)
+    minutes = (now.minute // 15 + 1) * 15
+    if minutes == 60:
+        next_live_ts = now.replace(minute=0) + timedelta(hours=1)
+    else:
+        next_live_ts = now.replace(minute=minutes)
+
+    print(f"🕒 Waiting until {next_live_ts} to begin live mode....")
+    while datetime.now() < next_live_ts:
+        time.sleep(5)
+
+    print("🚀 Entering live insertion mode (every 15 minutes)...")
 
     while True:
         now = datetime.now().replace(second=0, microsecond=0)
@@ -87,7 +115,7 @@ def live_data_insertion_loop():
             collection.insert_one(doc)
             last_vals[directory] = current
         print(f"[{now}] ✅ Inserted live records for all directories.")
-        time.sleep(900)  # Wait for 15 minutes
+        time.sleep(900)
 
 # ------------------ Script Entry Point ------------------
 if __name__ == "__main__":
