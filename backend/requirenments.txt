@@ -5,7 +5,7 @@ matplotlib
 tensorflow
 joblib
 python-dotenv
-fastapi
+fastapi[standard]
 uvicorn
 pydantic
 requests
