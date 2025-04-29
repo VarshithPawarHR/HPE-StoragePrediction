@@ -11,28 +11,6 @@ This project focuses on creating a forecasting system for storage data. It utili
 - MongoDB integration for fetching data.
 - Real-time predictions via a backend using FastAPI.
 
-## Directory Structure example :
-
-forecasting_project/
-├── models/
-│ ├── daily_model.keras
-│ ├── weekly_model.keras
-│ ├── monthly_model.keras
-│ ├── three_month_model.keras
-│ └── scalers/
-│ ├── daily_scaler.save
-│ ├── weekly_scaler.save
-│ └── monthly_scaler.save
-├── notebooks/
-│ ├── train_daily_model.ipynb
-│ ├── train_weekly_model.ipynb
-│ ├── train_monthly_model.ipynb
-│ └── train_three_month_model.ipynb
-├── backend/
-│ ├── app.py
-│ └── requirements.txt
-├── .env
-└── README.md
 
 ## Setup
 
