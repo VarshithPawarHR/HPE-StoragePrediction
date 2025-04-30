@@ -5,11 +5,10 @@ from typing import Dict, Any
 import asyncio
 from db import collection
 from pymongo import DESCENDING
-from datetime import datetime, timedelta
 from fastapi.responses import JSONResponse
-from pymongo import ASCENDING
-from typing import List
+from zoneinfo import ZoneInfo
 
+IST = ZoneInfo("Asia/Kolkata")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -47,9 +46,9 @@ async def get_directory_summary(
 ):
     cursor = collection.find(
         {"directory": directory}
-    ).sort("timestamp", DESCENDING).limit(4)
+    ).sort("timestamp", DESCENDING).limit(1)
 
-    latest_entries = await cursor.to_list(length=4)
+    latest_entries = await cursor.to_list(length=1)
 
     for entry in latest_entries:
         entry.pop("_id", None)
@@ -61,25 +60,21 @@ async def get_directory_summary(
 
 # APIs for historical data and please directories are named as /info,/customer do not pass info,customer like this
 
+
 @app.get("/directory-usage")
 async def get_directory_usage(
-    directory: str = Query(..., description="Directory name, e.g. /scratch"),
-    start: datetime = Query(..., description="Start time (ISO format)"),
-    end: datetime = Query(..., description="End time (ISO format)")
+    directory: str = Query(..., description="Directory name, e.g. /scratch")
 ):
     cursor = collection.find({
-        "directory": directory,
-        "timestamp": {
-            "$gte": start,
-            "$lte": end
-        }
-    }).sort("timestamp", ASCENDING)
+        "directory": directory
+    }).sort("timestamp", DESCENDING).limit(96)  # Fetch last 96 entries
 
-    results = await cursor.to_list(length=1000)  # adjust if needed
+    results = await cursor.to_list(length=96)  # Fetch 96 entries from the database
 
+    # Format the results
     formatted = [
         {
-            "timestamp": doc["timestamp"],
+            "timestamp": doc["timestamp"].strftime('%Y-%m-%dT%H:%M:%S%z'),  # Format the timestamp to show in required format
             "directory": doc["directory"],
             "storage_gb": doc["storage_gb"]
         }
@@ -88,8 +83,5 @@ async def get_directory_usage(
 
     return JSONResponse({
         "directory": directory,
-        "start": start,
-        "end": end,
         "data": formatted
     })
-
