@@ -71,7 +71,6 @@ async def get_directory_summary(
 
 # APIs for historical data and please directories are named as /info,/customer do not pass info,customer like this
 
-
 @app.get("/directory-usage")
 async def get_directory_usage(
     directory: str = Query(..., description="Directory name, e.g. /scratch")
@@ -97,6 +96,7 @@ async def get_directory_usage(
         "data": formatted
     })
 
+#growth rate endpoint logic is get the last 96th data entry then firstentry - last entry / lastentry No need for timestamps retreval from DB
 
 @app.get("/growth-rate")
 async def get_growth_rate(
@@ -131,4 +131,31 @@ async def get_growth_rate(
         "growth_rate_percent": round(growth_rate, 2)
     })
 
+#consumpton endpoint get the 96th data entry from start then latest- 96th entry
 
+@app.get("/total-consumption")
+async def get_total_storage_consumption(
+    directory: str = Query(..., description="Directory name, e.g. /scratch")
+):
+    cursor = collection.find(
+        {"directory": directory}
+    ).sort("timestamp", DESCENDING).limit(96)
+
+    results = await cursor.to_list(length=96)
+
+    if len(results) < 2:
+        return JSONResponse(
+            {"error": "Not enough data to calculate total storage consumption."}, status_code=400
+        )
+
+    current_storage = results[0]["storage_gb"]   # Newest entry
+    oldest_storage = results[-1]["storage_gb"]   # Oldest entry
+
+    total_consumed = current_storage - oldest_storage
+
+    return JSONResponse({
+        "directory": directory,
+        "initial_storage": oldest_storage,
+        "current_storage": current_storage,
+        "total_storage_consumed_gb": round(total_consumed, 2)
+    })
