@@ -7,6 +7,7 @@ from db import collection
 from pymongo import DESCENDING
 from fastapi.responses import JSONResponse
 from zoneinfo import ZoneInfo
+from fastapi.middleware.cors import CORSMiddleware
 
 IST = ZoneInfo("Asia/Kolkata")
 @asynccontextmanager
@@ -32,6 +33,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 
 @app.get("/")
