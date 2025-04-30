@@ -1,4 +1,4 @@
-# HPE Stroage Prediction backend
+# HPE Storage Prediction backend
 
 ## Project Overview
 
