@@ -42,17 +42,22 @@ async def root():
 #APIs for real time dashboard
 
 @app.get("/summary")
-async def get_summary():
-    cursor = collection.find().sort("timestamp", DESCENDING).limit(4)
+async def get_directory_summary(
+    directory: str = Query(..., description="Directory name, e.g. /scratch")
+):
+    cursor = collection.find(
+        {"directory": directory}
+    ).sort("timestamp", DESCENDING).limit(4)
+
     latest_entries = await cursor.to_list(length=4)
 
-    #_id beda if any use there please don't change here
     for entry in latest_entries:
         entry.pop("_id", None)
 
     return {
+        "directory": directory,
         "summary": latest_entries
-    }
+     }
 
 # APIs for historical data and please directories are named as /info,/customer do not pass info,customer like this
 
