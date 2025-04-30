@@ -159,3 +159,4 @@ async def get_total_storage_consumption(
         "current_storage": current_storage,
         "total_storage_consumed_gb": round(total_consumed, 2)
     })
+
