@@ -14,6 +14,7 @@ import os
 import subprocess
 import numpy as np
 import tensorflow as tf
+from datetime import datetime, timezone
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 tf.config.set_visible_devices([], 'GPU')
@@ -585,6 +586,8 @@ async def get_monthly_line_predictions(directory: str):
     results = [{"predicted_value": round(float(val), 3)} for val in pred_original.flatten()[:540]]
 
     return JSONResponse({directory: results})
+
+
 
 
 #keep alive tht keeps alive everything
