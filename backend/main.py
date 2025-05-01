@@ -9,6 +9,13 @@ from datetime import datetime, timedelta
 from fastapi.responses import JSONResponse
 from pymongo import ASCENDING
 from typing import List
+from Utils.loader import load_keras_models, load_scalers
+from Utils.preprocess import preprocess_input
+from fastapi import HTTPException
+import numpy as np
+
+models = load_keras_models()
+scalers = load_scalers()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -87,4 +94,39 @@ async def get_directory_usage(
         "end": end,
         "data": formatted
     })
+
+@app.get("/predictions/{horizon}")
+async def get_predictions(horizon: str):
+
+    directories = ["info", "scratch", "customer", "projects"]
+    results = {}
+
+    for directory in directories:
+        model_name = f"{directory}_{horizon}"
+        model = models.get(model_name)
+        scaler = scalers.get(model_name)
+
+        if model is None or scaler is None:
+            results[directory] = None
+            continue
+
+        
+        input = await preprocess_input(directory, scaler, horizon)
+
+        if input is None:
+            results[directory] = None
+            continue
+
+        
+        pred_scaled = model.predict(input)  # shape: (1, 1)
+
+        # Step 3: Inverse transform to get the value in GB
+        pred_original = scaler.inverse_transform(pred_scaled)
+        results[directory] = round(float(pred_original), 2)
+
+    return results
+
+
+
+
 
