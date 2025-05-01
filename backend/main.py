@@ -14,6 +14,7 @@ from fastapi import HTTPException
 import numpy as np
 from zoneinfo import ZoneInfo
 from fastapi.middleware.cors import CORSMiddleware
+from motor.motor_asyncio import AsyncIOMotorClient
 
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -199,5 +200,28 @@ async def get_total_storage_consumption(
         "initial_storage": oldest_storage,
         "current_storage": current_storage,
         "total_storage_consumed_gb": round(total_consumed, 2)
+    })
+
+
+@app.get("/predictions/current")
+async def get_current_storage():
+    # Get distinct directory names
+    directories = await collection.distinct("directory")
+
+    results = []
+
+    for directory in directories:
+        # Fetch latest entry for each directory
+        cursor = collection.find({"directory": directory}).sort("timestamp", DESCENDING).limit(1)
+        latest = await cursor.to_list(length=1)
+
+        if latest:
+            results.append({
+                "directory": directory,
+                "storage_gb": latest[0]["storage_gb"]
+            })
+
+    return JSONResponse({
+        "data": results
     })
 
