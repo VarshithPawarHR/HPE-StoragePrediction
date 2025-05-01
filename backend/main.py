@@ -5,7 +5,6 @@ from typing import Dict, Any
 import asyncio
 from db import collection
 from pymongo import DESCENDING
-from datetime import datetime, timedelta
 from fastapi.responses import JSONResponse
 from pymongo import ASCENDING
 from typing import List
@@ -13,10 +12,11 @@ from Utils.loader import load_keras_models, load_scalers
 from Utils.preprocess import preprocess_input_daily
 from fastapi import HTTPException
 import numpy as np
+from zoneinfo import ZoneInfo
+from fastapi.middleware.cors import CORSMiddleware
 
-models = load_keras_models()
-scalers = load_scalers()
 
+IST = ZoneInfo("Asia/Kolkata")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -41,6 +41,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 async def root():
@@ -49,39 +58,39 @@ async def root():
 #APIs for real time dashboard
 
 @app.get("/summary")
-async def get_summary():
-    cursor = collection.find().sort("timestamp", DESCENDING).limit(4)
-    latest_entries = await cursor.to_list(length=4)
+async def get_directory_summary(
+    directory: str = Query(..., description="Directory name, e.g. /scratch")
+):
+    cursor = collection.find(
+        {"directory": directory}
+    ).sort("timestamp", DESCENDING).limit(1)
 
-    #_id beda if any use there please don't change here
+    latest_entries = await cursor.to_list(length=1)
+
     for entry in latest_entries:
         entry.pop("_id", None)
 
     return {
+        "directory": directory,
         "summary": latest_entries
-    }
+     }
 
 # APIs for historical data and please directories are named as /info,/customer do not pass info,customer like this
 
 @app.get("/directory-usage")
 async def get_directory_usage(
-    directory: str = Query(..., description="Directory name, e.g. /scratch"),
-    start: datetime = Query(..., description="Start time (ISO format)"),
-    end: datetime = Query(..., description="End time (ISO format)")
+    directory: str = Query(..., description="Directory name, e.g. /scratch")
 ):
     cursor = collection.find({
-        "directory": directory,
-        "timestamp": {
-            "$gte": start,
-            "$lte": end
-        }
-    }).sort("timestamp", ASCENDING)
+        "directory": directory
+    }).sort("timestamp", DESCENDING).limit(96)  # Fetch last 96 entries
 
-    results = await cursor.to_list(length=1000)  # adjust if needed
+    results = await cursor.to_list(length=96)  # Fetch 96 entries from the database
 
+    # Format the results
     formatted = [
         {
-            "timestamp": doc["timestamp"],
+            "timestamp": doc["timestamp"].strftime('%Y-%m-%dT%H:%M:%S%z'),  # Format the timestamp to show in required format
             "directory": doc["directory"],
             "storage_gb": doc["storage_gb"]
         }
@@ -90,8 +99,6 @@ async def get_directory_usage(
 
     return JSONResponse({
         "directory": directory,
-        "start": start,
-        "end": end,
         "data": formatted
     })
 
@@ -103,8 +110,9 @@ async def get_predictions():
 
     for directory in directories:
         model_name = f"{directory}_daily"
-        model = models.get(model_name)
-        scaler = scalers.get(model_name)
+        # Fetch the model and scaler from the app state
+        model = app.state.models.get(model_name)
+        scaler = app.state.scalers.get(model_name)
 
         if model is None or scaler is None:
             results[directory] = None
@@ -129,4 +137,67 @@ async def get_predictions():
 
 
 
+#growth rate endpoint logic is get the last 96th data entry then firstentry - last entry / lastentry No need for timestamps retreval from DB
+
+@app.get("/growth-rate")
+async def get_growth_rate(
+    directory: str = Query(..., description="Directory name, e.g. /scratch")
+):
+    cursor = collection.find({
+        "directory": directory
+    }).sort("timestamp", DESCENDING).limit(96)
+
+    results = await cursor.to_list(length=96)
+
+    if len(results) < 2:
+        return JSONResponse(
+            {"error": "Not enough data to calculate growth rate."}, status_code=400
+        )
+
+    first_entry = results[0]["storage_gb"]
+    last_entry = results[-1]["storage_gb"]
+
+    if last_entry == 0:
+        return JSONResponse(
+            {"error": "Last entry storage is 0, cannot divide by zero."}, status_code=400
+        )
+
+    growth_rate = (first_entry - last_entry)  / last_entry
+    growth_rate = growth_rate*100  # Convert to percentage
+
+    return JSONResponse({
+        "directory": directory,
+        "first_entry": first_entry,
+        "last_entry": last_entry,
+        "growth_rate_percent": round(growth_rate, 2)
+    })
+
+#consumpton endpoint get the 96th data entry from start then latest- 96th entry
+
+@app.get("/total-consumption")
+async def get_total_storage_consumption(
+    directory: str = Query(..., description="Directory name, e.g. /scratch")
+):
+    cursor = collection.find(
+        {"directory": directory}
+    ).sort("timestamp", DESCENDING).limit(96)
+
+    results = await cursor.to_list(length=96)
+
+    if len(results) < 2:
+        return JSONResponse(
+            {"error": "Not enough data to calculate total storage consumption."}, status_code=400
+        )
+
+    current_storage = results[0]["storage_gb"]   # Newest entry
+    oldest_storage = results[-1]["storage_gb"]   # Oldest entry
+
+    total_consumed = current_storage - oldest_storage
+
+    return JSONResponse({
+        "directory": directory,
+        "initial_storage": oldest_storage,
+        "current_storage": current_storage,
+        "total_storage_consumed_gb": round(total_consumed, 2)
+    })
 
