@@ -15,6 +15,24 @@ import numpy as np
 from zoneinfo import ZoneInfo
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+import os
+import subprocess
+from dotenv import load_dotenv
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+JUPYTER_PATH = os.path.join(BASE_DIR, os.getenv("JUPYTER_PATH"))
+
+def run_notebook(notebook_name):
+    notebook_path = os.path.join(JUPYTER_PATH, notebook_name)
+    try:
+        result = subprocess.run(
+            ["jupyter", "nbconvert", "--to", "notebook", "--execute", notebook_path, "--inplace"],
+            capture_output=True, text=True, check=True
+        )
+        return {"status": "success", "details": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"status": "error", "details": e.stderr}
 
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -224,3 +242,16 @@ async def get_current_storage():
     return JSONResponse(result)
 
 
+
+
+@app.post("/retrain/weekly")
+def retrain_weekly():
+    return run_notebook("train_weekly_model.ipynb")
+
+@app.post("/retrain/monthly")
+def retrain_monthly():
+    return run_notebook("train_monthly_model.ipynb")
+
+@app.post("/retrain/quarterly")
+def retrain_quarterly():
+    return run_notebook("train_3_months_model.ipynb")
