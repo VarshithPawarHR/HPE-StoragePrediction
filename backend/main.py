@@ -1,26 +1,22 @@
-import pandas as pd
+import uvicorn
 from fastapi import FastAPI, Query
 from contextlib import asynccontextmanager
-from Utils.loader import load_keras_models, load_scalers
 from typing import Dict, Any
 import asyncio
 from db import collection
 from pymongo import DESCENDING
-from fastapi.responses import JSONResponse
-from pymongo import ASCENDING
-from typing import List
 from Utils.loader import load_keras_models, load_scalers
 from Utils.preprocess import preprocess_input_daily, preprocess_input
 from fastapi import HTTPException
-import numpy as np
 from zoneinfo import ZoneInfo
 from fastapi.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import subprocess
-from dotenv import load_dotenv
 import numpy as np
-import uvicorn
+import tensorflow as tf
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+tf.config.set_visible_devices([], 'GPU')
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -601,5 +597,8 @@ async def keep_alive():
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=10000)
+    # Get the port from the environment variable `PORT`, default to 8000 if not set
+    port = int(os.getenv("PORT", 8000))
+
+    # Run the FastAPI app using uvicorn, bind to all network interfaces (0.0.0.0)
+    uvicorn.run(app, host="0.0.0.0", port=port)
