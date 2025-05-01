@@ -71,3 +71,4 @@ async def preprocess_input(directory: str, scaler):
     X_input = features.reshape(1, 42, 3)
 
     return X_input
+
