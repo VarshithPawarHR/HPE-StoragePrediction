@@ -45,7 +45,7 @@ To set up the frontend, see the `https://github.com/VarshithPawarHR/HPE-Dashboar
 The backend handles:
 
 - Live data ingestion and synthetic data simulation  
-- Storage forecasting using **LSTM** and **ARIMA**  
+- Storage forecasting using hybrid models consisting of **LSTM**,**GRU**,**conv1D**  
 - API services consumed by the frontend  
 - MongoDB database integration
 
@@ -54,12 +54,7 @@ The backend handles:
 - Python: **3.10.x**  
 - MongoDB: running locally or via cloud
 
-Install dependencies:
 
-```bash
-pip install -r requirements.txt
-
-```
 ### Clone
 
 ```bash
@@ -86,7 +81,6 @@ JUPYTER_PATH=notebooks
 
 ### Run the backend
 ```bash
-cd backend
 fastapi dev main.py
 ```
 
