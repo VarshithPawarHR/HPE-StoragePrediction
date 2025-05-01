@@ -18,10 +18,36 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import subprocess
 from dotenv import load_dotenv
+import numpy as np
+
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JUPYTER_PATH = os.path.join(BASE_DIR, os.getenv("JUPYTER_PATH"))
+
+def reshape_input(input_data):
+    """
+    Reshape the input to the required shape (1, 42, 3).
+    Assuming input_data is a 1D array (e.g., shape (1, 9)).
+
+    :param input_data: The raw input data.
+    :return: The reshaped input data.
+    """
+    input_data = np.array(input_data)  # Convert input to a numpy array
+    input_length = input_data.shape[1]  # This should be 9 if your input shape is (1, 9)
+
+    # If input has more than 126 features, we need to trim it
+    if input_data.size > 126:
+        input_data = input_data.flatten()[:126]
+    # If input has less than 126 features, we need to pad it
+    elif input_data.size < 126:
+        padding_length = 126 - input_data.size
+        input_data = np.pad(input_data.flatten(), (0, padding_length), mode='constant')
+
+    # Reshape to (1, 42, 3), assuming we need to split it into 3 features per time step
+    reshaped_input = input_data.reshape(1, 42, 3)  # Reshape to (1, 42, 3)
+
+    return reshaped_input
 
 def run_notebook(notebook_name):
     notebook_path = os.path.join(JUPYTER_PATH, notebook_name)
@@ -255,3 +281,43 @@ def retrain_monthly():
 @app.post("/retrain/quarterly")
 def retrain_quarterly():
     return run_notebook("train_3_months_model.ipynb")
+
+
+
+
+#line graph for predictions
+@app.get("/predictions/weekly-line/{directory}")
+async def get_weekly_line_predictions(directory: str):
+    # Check if the directory is valid
+    valid_directories = ["info", "scratch", "customer", "projects"]
+    if directory not in valid_directories:
+        return JSONResponse({"error": "Invalid directory"}, status_code=400)
+
+    model_name = f"{directory}_weekly"
+    model = app.state.models.get(model_name)
+    scaler = app.state.scalers.get(model_name)
+
+    if model is None or scaler is None:
+        return JSONResponse({"error": f"Model or scaler for {directory} not found"}, status_code=404)
+
+    # Preprocess input for predictions
+    input_data = await preprocess_input_daily(directory, scaler)
+
+    if input_data is None:
+        return JSONResponse({"error": f"Failed to preprocess input for {directory}"}, status_code=400)
+
+    # Reshape the input to match the model's expected shape (1, 42, 3)
+    input_data = reshape_input(input_data)
+
+    # Predict values and inverse transform
+    pred_scaled = model.predict(input_data)
+    pred_original = scaler.inverse_transform(pred_scaled)
+
+    # For line graph: Return predicted values along with timestamps
+    results = [{"predicted_value": round(float(val), 2)} for i, val in
+               enumerate(pred_original.flatten())]
+
+    return JSONResponse({directory: results})
+
+
+
