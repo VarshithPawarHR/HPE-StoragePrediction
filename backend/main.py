@@ -520,3 +520,71 @@ async def get_overall_prediction_category(predictions: dict):
     return JSONResponse({
         "overall_category": overall_category
     })
+@app.get("/predictions/monthly-line/{directory}")
+async def get_monthly_line_predictions(directory: str):
+    # Check if the directory is valid
+    valid_directories = ["info", "scratch", "customer", "projects"]
+    if directory not in valid_directories:
+        return JSONResponse({"error": "Invalid directory"}, status_code=400)
+
+    # Model and scaler names for monthly predictions
+    model_name = f"{directory}_monthly"
+    model = app.state.models.get(model_name)
+    scaler = app.state.scalers.get(model_name)
+
+    if model is None or scaler is None:
+        return JSONResponse({"error": f"Model or scaler for {directory} not found"}, status_code=404)
+
+    # Preprocess input data for monthly predictions
+    input_data = await preprocess_input(directory, scaler)
+
+    if input_data is None:
+        return JSONResponse({"error": f"Failed to preprocess input for {directory}"}, status_code=400)
+
+    # Reshape the input data to match the model's expected shape (1, 42, 3)
+    input_data = reshape_input(input_data)
+
+    # Predict values and inverse transform the results
+    pred_scaled = model.predict(input_data)
+    pred_original = scaler.inverse_transform(pred_scaled)
+
+    # Limit to first 180 predicted values
+    results = [{"predicted_value": round(float(val), 3)} for val in pred_original.flatten()[:180]]
+
+    return JSONResponse({directory: results})
+
+
+
+@app.get("/predictions/three-monthly-line/{directory}")
+async def get_monthly_line_predictions(directory: str):
+    # Check if the directory is valid
+    valid_directories = ["info", "scratch", "customer", "projects"]
+    if directory not in valid_directories:
+        return JSONResponse({"error": "Invalid directory"}, status_code=400)
+
+    # Model and scaler names for monthly predictions
+    model_name = f"{directory}_3_monthly"
+    model = app.state.models.get(model_name)
+    scaler = app.state.scalers.get(model_name)
+
+    if model is None or scaler is None:
+        return JSONResponse({"error": f"Model or scaler for {directory} not found"}, status_code=404)
+
+    # Preprocess input data for monthly predictions
+    input_data = await preprocess_input(directory, scaler)
+
+    if input_data is None:
+        return JSONResponse({"error": f"Failed to preprocess input for {directory}"}, status_code=400)
+
+    # Reshape the input data to match the model's expected shape (1, 42, 3)
+    input_data = reshape_input(input_data)
+
+    # Predict values and inverse transform the results
+    pred_scaled = model.predict(input_data)
+    pred_original = scaler.inverse_transform(pred_scaled)
+
+    # Limit to first 180 predicted values
+    results = [{"predicted_value": round(float(val), 3)} for val in pred_original.flatten()[:540]]
+
+    return JSONResponse({directory: results})
+
