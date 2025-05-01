@@ -11,3 +11,4 @@ pydantic
 requests
 motor
 db
+papermill
