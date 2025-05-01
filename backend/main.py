@@ -203,12 +203,15 @@ async def get_total_storage_consumption(
     })
 
 
+
+#this is for pie chart
+
 @app.get("/predictions/current")
 async def get_current_storage():
     # Get distinct directory names
     directories = await collection.distinct("directory")
 
-    results = []
+    result = {}
 
     for directory in directories:
         # Fetch latest entry for each directory
@@ -216,12 +219,6 @@ async def get_current_storage():
         latest = await cursor.to_list(length=1)
 
         if latest:
-            results.append({
-                "directory": directory,
-                "storage_gb": latest[0]["storage_gb"]
-            })
+            result[directory.strip("/")] = latest[0]["storage_gb"]  # remove leading slash if you want clean keys
 
-    return JSONResponse({
-        "data": results
-    })
-
+    return JSONResponse(result)
