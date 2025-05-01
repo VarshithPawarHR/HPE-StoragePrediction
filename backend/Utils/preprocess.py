@@ -4,7 +4,7 @@ from db import collection
 
 
 
-async def preprocess_input(directory: str,  scaler, horizon: str):
+async def preprocess_input_daily(directory: str,  scaler):
     
     cursor = collection.find(
         {"directory": f"/{directory}"},

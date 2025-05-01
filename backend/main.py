@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from pymongo import ASCENDING
 from typing import List
 from Utils.loader import load_keras_models, load_scalers
-from Utils.preprocess import preprocess_input
+from Utils.preprocess import preprocess_input_daily
 from fastapi import HTTPException
 import numpy as np
 
@@ -95,14 +95,14 @@ async def get_directory_usage(
         "data": formatted
     })
 
-@app.get("/predictions/{horizon}")
-async def get_predictions(horizon: str):
+@app.get("/predictions/daily")
+async def get_predictions():
 
     directories = ["info", "scratch", "customer", "projects"]
     results = {}
 
     for directory in directories:
-        model_name = f"{directory}_{horizon}"
+        model_name = f"{directory}_daily"
         model = models.get(model_name)
         scaler = scalers.get(model_name)
 
@@ -111,7 +111,7 @@ async def get_predictions(horizon: str):
             continue
 
         
-        input = await preprocess_input(directory, scaler, horizon)
+        input = await preprocess_input_daily(directory, scaler)
 
         if input is None:
             results[directory] = None
