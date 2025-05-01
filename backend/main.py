@@ -6,6 +6,12 @@ import asyncio
 from db import collection
 from pymongo import DESCENDING
 from fastapi.responses import JSONResponse
+from pymongo import ASCENDING
+from typing import List
+from Utils.loader import load_keras_models, load_scalers
+from Utils.preprocess import preprocess_input_daily
+from fastapi import HTTPException
+import numpy as np
 from zoneinfo import ZoneInfo
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -95,6 +101,41 @@ async def get_directory_usage(
         "directory": directory,
         "data": formatted
     })
+
+@app.get("/predictions/daily")
+async def get_predictions():
+
+    directories = ["info", "scratch", "customer", "projects"]
+    results = {}
+
+    for directory in directories:
+        model_name = f"{directory}_daily"
+        # Fetch the model and scaler from the app state
+        model = app.state.models.get(model_name)
+        scaler = app.state.scalers.get(model_name)
+
+        if model is None or scaler is None:
+            results[directory] = None
+            continue
+
+        
+        input = await preprocess_input_daily(directory, scaler)
+
+        if input is None:
+            results[directory] = None
+            continue
+
+        
+        pred_scaled = model.predict(input)  # shape: (1, 1)
+
+        # Step 3: Inverse transform to get the value in GB
+        pred_original = scaler.inverse_transform(pred_scaled)
+        results[directory] = round(float(pred_original), 2)
+
+    return results
+
+
+
 
 #growth rate endpoint logic is get the last 96th data entry then firstentry - last entry / lastentry No need for timestamps retreval from DB
 
