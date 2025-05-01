@@ -222,3 +222,5 @@ async def get_current_storage():
             result[directory.strip("/")] = latest[0]["storage_gb"]  # remove leading slash if you want clean keys
 
     return JSONResponse(result)
+
+
