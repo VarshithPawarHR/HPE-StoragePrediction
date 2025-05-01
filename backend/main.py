@@ -415,7 +415,9 @@ def retrain_monthly():
 def retrain_quarterly():
     return run_notebook("train_3_months_model.ipynb")
 
-
+@app.post("/retrain/next_day")
+def retrain_weekly():
+    return run_notebook("train_daily_model.ipynb")
 
 
 #line graph for predictions
@@ -587,4 +589,14 @@ async def get_monthly_line_predictions(directory: str):
     results = [{"predicted_value": round(float(val), 3)} for val in pred_original.flatten()[:540]]
 
     return JSONResponse({directory: results})
+
+
+#keep alive tht keeps alive everything
+# This endpoint is used to keep the server alive and can be used for health checks.
+@app.get("/keep-alive")
+@app.head("/keep-alive")
+async def keep_alive():
+    """Endpoint to keep the server alive."""
+    return {"status": "alive"}
+
 
