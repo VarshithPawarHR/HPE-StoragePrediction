@@ -1,3 +1,4 @@
+import pandas as pd
 from fastapi import FastAPI, Query
 from contextlib import asynccontextmanager
 from Utils.loader import load_keras_models, load_scalers
@@ -15,6 +16,7 @@ import numpy as np
 from zoneinfo import ZoneInfo
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from Utils.model_ops import update_model_for_directory
 
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -224,3 +226,33 @@ async def get_current_storage():
     return JSONResponse(result)
 
 
+@app.post("/retrain/daily")
+async def retrain_all_daily_models():
+    DIRECTORIES = ["info", "customer", "scratch", "projects"]
+    models = load_keras_models()
+    scalers = load_scalers()
+
+    cursor = collection.find({}, {"_id": 0, "timestamp": 1, "directory": 1, "storage_gb": 1})
+    df = pd.DataFrame(await cursor.to_list(None))
+
+    if df.empty:
+        return {"status": "error", "message": "No data found in MongoDB collection"}
+
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df.sort_values('timestamp', inplace=True)
+
+    results = {}
+    for dir_name in DIRECTORIES:
+        key = f"{dir_name}_daily"  # for accessing models and scalers
+        dir_df = df[df["directory"] == f"/{dir_name}"].copy()
+
+        try:
+            result = update_model_for_directory(dir_name, dir_df, models[key], scalers[key])
+            results[dir_name] = result
+        except Exception as e:
+                results[dir_name] = f"❌ Error: {str(e)}"
+
+    return {
+        "status": "completed",
+        "retrain_results": results
+    }
