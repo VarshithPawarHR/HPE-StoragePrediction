@@ -12,3 +12,4 @@ requests
 motor
 db
 papermill
+uvicorn

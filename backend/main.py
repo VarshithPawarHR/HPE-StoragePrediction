@@ -20,7 +20,7 @@ import os
 import subprocess
 from dotenv import load_dotenv
 import numpy as np
-
+import uvicorn
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
