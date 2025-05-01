@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pymongo import ASCENDING
 from typing import List
 from Utils.loader import load_keras_models, load_scalers
-from Utils.preprocess import preprocess_input_daily
+from Utils.preprocess import preprocess_input_daily, preprocess_input
 from fastapi import HTTPException
 import numpy as np
 from zoneinfo import ZoneInfo
@@ -103,6 +103,7 @@ async def get_directory_usage(
         "data": formatted
     })
 
+#api endpoint for daily prediction for all directories predicts only the final value at next day
 @app.get("/predictions/daily")
 async def get_predictions():
 
@@ -134,6 +135,106 @@ async def get_predictions():
         results[directory] = round(float(pred_original), 2)
 
     return results
+
+#api endpoint for weekly prediction for all directories predicts the next 42 steps (7 days),
+#and returns only the final predicted value (42nd step)
+@app.get("/predictions/weekly")
+async def get_weekly_predictions():
+    directories = ["info", "scratch", "customer", "projects"]
+    results = {}
+
+    for directory in directories:
+        model_name = f"{directory}_weekly"
+        model = app.state.models.get(model_name)
+        scaler = app.state.scalers.get(model_name)
+
+        if model is None or scaler is None:
+            results[directory] = None
+            continue
+
+        X_input = await preprocess_input(directory, scaler)
+
+        if X_input is None:
+            results[directory] = None
+            continue
+
+        # Predict 7-day (42 steps) sequence
+        pred_scaled = model.predict(X_input)  # shape: (1, 42)
+
+        # Inverse transform the last predicted value (7th day = 42nd step)
+        last_pred_scaled = pred_scaled[0, -1].reshape(-1, 1)
+        last_pred_gb = scaler.inverse_transform(last_pred_scaled)
+
+        results[directory] = round(float(last_pred_gb[0][0]), 2)
+
+    return results
+
+# api endpoint for monthly predictions for all directories
+# for each directory (info, scratch, customer, projects) using their respective 1-month models.
+# It prepares the latest input sequence, predicts the next 180 steps (30 days with 4-hour intervals),
+# and returns only the final predicted value (180th step) 
+@app.get("/predictions/monthly")
+async def get_monthly_predictions():
+    directories = ["info", "scratch", "customer", "projects"]
+    results = {}
+
+    for directory in directories:
+        model_name = f"{directory}_monthly"
+        model = app.state.models.get(model_name)
+        scaler = app.state.scalers.get(model_name)
+
+        if model is None or scaler is None:
+            results[directory] = None
+            continue
+
+        try:
+            X_input = await preprocess_input(directory, scaler)
+        except HTTPException:
+            results[directory] = None
+            continue
+
+        pred_scaled = model.predict(X_input)  # (1, 180)
+        pred_original = scaler.inverse_transform(pred_scaled.reshape(-1, 1))  # (180, 1)
+
+        # Return only the last (180th) value = prediction at end of 30th day
+        last_value = round(float(pred_original[-1]), 2)
+        results[directory] = last_value
+
+    return results
+
+# api endpoint for 3 months prediction for all directories
+# It prepares the latest input sequence, predicts the next 540 time steps (3 months with 4-hour intervals),
+# and returns only the final predicted value (540th step) in GB after inverse scaling.
+@app.get("/predictions/3_months")
+async def get_3_month_predictions():
+    directories = ["info", "scratch", "customer", "projects"]
+    results = {}
+
+    for directory in directories:
+        model_name = f"{directory}_3_monthly"
+        model = app.state.models.get(model_name)
+        scaler = app.state.scalers.get(model_name)
+
+        if model is None or scaler is None:
+            results[directory] = None
+            continue
+
+        try:
+            X_input = await preprocess_input(directory, scaler)
+        except HTTPException:
+            results[directory] = None
+            continue
+
+        # Predict
+        pred_scaled = model.predict(X_input)  # Shape: (1, 540)
+        pred_original = scaler.inverse_transform(pred_scaled.reshape(-1, 1))  # (540, 1)
+
+        # Get the 540th step (last value = end of 3rd month)
+        last_value = round(float(pred_original[-1]), 2)
+        results[directory] = last_value
+
+    return results
+
 
 
 
