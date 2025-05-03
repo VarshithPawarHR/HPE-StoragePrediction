@@ -150,7 +150,7 @@ async def get_directory_usage(
 @app.get("/predictions/daily")
 async def get_predictions():
 
-    directories = ["info", "scratch", "customer", "project"]
+    directories = ["info", "scratch", "customer", "projects"]
     results = {}
 
     for directory in directories:
