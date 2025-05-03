@@ -1,25 +1,23 @@
+import uvicorn
 from fastapi import FastAPI, Query
 from contextlib import asynccontextmanager
-from Utils.loader import load_keras_models, load_scalers
 from typing import Dict, Any
 import asyncio
 from db import collection
 from pymongo import DESCENDING
-from fastapi.responses import JSONResponse
-from pymongo import ASCENDING
-from typing import List
 from Utils.loader import load_keras_models, load_scalers
 from Utils.preprocess import preprocess_input_daily, preprocess_input
 from fastapi import HTTPException
-import numpy as np
 from zoneinfo import ZoneInfo
 from fastapi.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import subprocess
-from dotenv import load_dotenv
 import numpy as np
+import tensorflow as tf
+from datetime import datetime, timezone
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+tf.config.set_visible_devices([], 'GPU')
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -59,6 +57,7 @@ def run_notebook(notebook_name):
         return {"status": "success", "details": result.stdout}
     except subprocess.CalledProcessError as e:
         return {"status": "error", "details": e.stderr}
+from Utils.model_ops import update_model_for_directory
 
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -151,7 +150,7 @@ async def get_directory_usage(
 @app.get("/predictions/daily")
 async def get_predictions():
 
-    directories = ["info", "scratch", "customer", "projects"]
+    directories = ["info", "scratch", "customer", "project"]
     results = {}
 
     for directory in directories:
@@ -369,6 +368,36 @@ async def get_current_storage():
     return JSONResponse(result)
 
 
+@app.post("/retrain/daily")
+async def retrain_all_daily_models():
+    DIRECTORIES = ["info", "customer", "scratch", "projects"]
+    models = load_keras_models()
+    scalers = load_scalers()
+
+    cursor = collection.find({}, {"_id": 0, "timestamp": 1, "directory": 1, "storage_gb": 1})
+    df = pd.DataFrame(await cursor.to_list(None))
+
+    if df.empty:
+        return {"status": "error", "message": "No data found in MongoDB collection"}
+
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df.sort_values('timestamp', inplace=True)
+
+    results = {}
+    for dir_name in DIRECTORIES:
+        key = f"{dir_name}_daily"  # for accessing models and scalers
+        dir_df = df[df["directory"] == f"/{dir_name}"].copy()
+
+        try:
+            result = update_model_for_directory(dir_name, dir_df, models[key], scalers[key])
+            results[dir_name] = result
+        except Exception as e:
+                results[dir_name] = f"❌ Error: {str(e)}"
+
+    return {
+        "status": "completed",
+        "retrain_results": results
+    }
 
 
 @app.post("/retrain/weekly")
@@ -383,7 +412,9 @@ def retrain_monthly():
 def retrain_quarterly():
     return run_notebook("train_3_months_model.ipynb")
 
-
+@app.post("/retrain/next_day")
+def retrain_weekly():
+    return run_notebook("train_daily_model.ipynb")
 
 
 #line graph for predictions
@@ -420,5 +451,157 @@ async def get_weekly_line_predictions(directory: str):
 
     return JSONResponse({directory: results})
 
+from fastapi.responses import JSONResponse
+
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import Dict
+import pandas as pd
+from datetime import datetime
+
+@app.post("/predictions/category")
+async def get_overall_prediction_category(predictions: dict):
+    import pandas as pd
+    from collections import defaultdict
+    from fastapi.responses import JSONResponse
+
+    # Normalize input keys to match DB (add leading slash)
+    predictions = {f"/{k.lstrip('/')}" : v for k, v in predictions.items()}
+
+    cursor = collection.find().sort("timestamp", -1).limit(2880)
+
+    data = defaultdict(list)
+    async for doc in cursor:
+        data['timestamp'].append(pd.to_datetime(doc['timestamp']))
+        data['directory'].append(doc['directory'])
+        data['storage_gb'].append(doc['storage_gb'])
+
+    df = pd.DataFrame(data)
+
+    if df.empty:
+        return JSONResponse({"error": "No data found in DB."}, status_code=404)
+
+    # Compute quantile thresholds per directory
+    labels = {}
+    for dir_name in df['directory'].unique():
+        subset = df[df['directory'] == dir_name]
+        q1 = subset['storage_gb'].quantile(0.33)
+        q2 = subset['storage_gb'].quantile(0.66)
+        labels[dir_name] = {'low': q1, 'moderate': q2}
+
+    label_scores = {'low': 1, 'moderate': 2, 'high': 3}
+    scores = []
+
+    for directory, predicted_value in predictions.items():
+        if directory not in labels:
+            return JSONResponse({"error": f"Invalid directory: {directory}"}, status_code=400)
+
+        thresholds = labels[directory]
+        if predicted_value <= thresholds['low']:
+            category = 'low'
+        elif predicted_value <= thresholds['moderate']:
+            category = 'moderate'
+        else:
+            category = 'high'
+
+        scores.append(label_scores[category])
+
+    avg_score = sum(scores) / len(scores)
+
+    if avg_score <= 1.5:
+        overall_category = 'low'
+    elif avg_score <= 2.3:
+        overall_category = 'moderate'
+    else:
+        overall_category = 'high'
+
+    return JSONResponse({
+        "overall_category": overall_category
+    })
+@app.get("/predictions/monthly-line/{directory}")
+async def get_monthly_line_predictions(directory: str):
+    # Check if the directory is valid
+    valid_directories = ["info", "scratch", "customer", "projects"]
+    if directory not in valid_directories:
+        return JSONResponse({"error": "Invalid directory"}, status_code=400)
+
+    # Model and scaler names for monthly predictions
+    model_name = f"{directory}_monthly"
+    model = app.state.models.get(model_name)
+    scaler = app.state.scalers.get(model_name)
+
+    if model is None or scaler is None:
+        return JSONResponse({"error": f"Model or scaler for {directory} not found"}, status_code=404)
+
+    # Preprocess input data for monthly predictions
+    input_data = await preprocess_input(directory, scaler)
+
+    if input_data is None:
+        return JSONResponse({"error": f"Failed to preprocess input for {directory}"}, status_code=400)
+
+    # Reshape the input data to match the model's expected shape (1, 42, 3)
+    input_data = reshape_input(input_data)
+
+    # Predict values and inverse transform the results
+    pred_scaled = model.predict(input_data)
+    pred_original = scaler.inverse_transform(pred_scaled)
+
+    # Limit to first 180 predicted values
+    results = [{"predicted_value": round(float(val), 3)} for val in pred_original.flatten()[:180]]
+
+    return JSONResponse({directory: results})
 
 
+
+@app.get("/predictions/three-monthly-line/{directory}")
+async def get_monthly_line_predictions(directory: str):
+    # Check if the directory is valid
+    valid_directories = ["info", "scratch", "customer", "projects"]
+    if directory not in valid_directories:
+        return JSONResponse({"error": "Invalid directory"}, status_code=400)
+
+    # Model and scaler names for monthly predictions
+    model_name = f"{directory}_3_monthly"
+    model = app.state.models.get(model_name)
+    scaler = app.state.scalers.get(model_name)
+
+    if model is None or scaler is None:
+        return JSONResponse({"error": f"Model or scaler for {directory} not found"}, status_code=404)
+
+    # Preprocess input data for monthly predictions
+    input_data = await preprocess_input(directory, scaler)
+
+    if input_data is None:
+        return JSONResponse({"error": f"Failed to preprocess input for {directory}"}, status_code=400)
+
+    # Reshape the input data to match the model's expected shape (1, 42, 3)
+    input_data = reshape_input(input_data)
+
+    # Predict values and inverse transform the results
+    pred_scaled = model.predict(input_data)
+    pred_original = scaler.inverse_transform(pred_scaled)
+
+    # Limit to first 180 predicted values
+    results = [{"predicted_value": round(float(val), 3)} for val in pred_original.flatten()[:540]]
+
+    return JSONResponse({directory: results})
+
+
+
+
+#keep alive tht keeps alive everything
+# This endpoint is used to keep the server alive and can be used for health checks.
+@app.get("/keep-alive")
+@app.head("/keep-alive")
+async def keep_alive():
+    """Endpoint to keep the server alive."""
+    return {"status": "alive"}
+
+
+if __name__ == "__main__":
+    # Get the port from the environment variable `PORT`, default to 8000 if not set
+    port = int(os.getenv("PORT", 8000))
+
+    # Run the FastAPI app using uvicorn, bind to all network interfaces (0.0.0.0)
+    uvicorn.run(app, host="0.0.0.0", port=port)

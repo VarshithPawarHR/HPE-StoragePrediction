@@ -5,10 +5,11 @@ matplotlib
 tensorflow
 joblib
 python-dotenv
-fastapi[standard]
+fastapi
 uvicorn
 pydantic
 requests
 motor
 db
 papermill
+nbconvert

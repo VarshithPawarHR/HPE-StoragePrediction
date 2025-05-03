@@ -6,3 +6,5 @@ Synthetic/.env
 .idea
 
 .venv
+__pycache__/
+*.pyc
