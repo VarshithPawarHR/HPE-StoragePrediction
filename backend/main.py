@@ -15,6 +15,17 @@ import subprocess
 import numpy as np
 import tensorflow as tf
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+from motor.motor_asyncio import AsyncIOMotorClient
+
+load_dotenv()
+# Read from .env
+MONGO_URL = os.getenv("MONGO_URL")
+MONGO_DB = os.getenv("MONGO_DB")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
+
+# Global variable to store directories
+directories = []
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 tf.config.set_visible_devices([], 'GPU')
@@ -63,7 +74,16 @@ from Utils.model_ops import update_model_for_directory
 IST = ZoneInfo("Asia/Kolkata")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global directories
     try:
+        # Connect to MongoDB
+        client = AsyncIOMotorClient(MONGO_URL)
+        db = client[MONGO_DB]
+        collection = db[MONGO_COLLECTION]
+
+        directories_raw = await collection.distinct("directory")
+        directories = [d.lstrip("/") for d in directories_raw]  # remove leading slash if present
+
         # Load models and scalers
         models: Dict[str, Any] = await asyncio.to_thread(load_keras_models)
         scalers: Dict[str, Any] = await asyncio.to_thread(load_scalers)
@@ -83,6 +103,7 @@ async def lifespan(app: FastAPI):
     print("Application is shutting down.")
 
 
+
 app = FastAPI(lifespan=lifespan)
 
 # Add CORS middleware
@@ -93,6 +114,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 @app.get("/")
@@ -150,7 +172,7 @@ async def get_directory_usage(
 @app.get("/predictions/daily")
 async def get_predictions():
 
-    directories = ["info", "scratch", "customer", "projects"]
+    
     results = {}
 
     for directory in directories:
@@ -183,7 +205,7 @@ async def get_predictions():
 #and returns only the final predicted value (42nd step)
 @app.get("/predictions/weekly")
 async def get_weekly_predictions():
-    directories = ["info", "scratch", "customer", "projects"]
+    
     results = {}
 
     for directory in directories:
@@ -218,7 +240,7 @@ async def get_weekly_predictions():
 # and returns only the final predicted value (180th step) 
 @app.get("/predictions/monthly")
 async def get_monthly_predictions():
-    directories = ["info", "scratch", "customer", "projects"]
+    
     results = {}
 
     for directory in directories:
@@ -250,7 +272,7 @@ async def get_monthly_predictions():
 # and returns only the final predicted value (540th step) in GB after inverse scaling.
 @app.get("/predictions/3_months")
 async def get_3_month_predictions():
-    directories = ["info", "scratch", "customer", "projects"]
+    
     results = {}
 
     for directory in directories:
@@ -370,7 +392,7 @@ async def get_current_storage():
 
 @app.post("/retrain/daily")
 async def retrain_all_daily_models():
-    DIRECTORIES = ["info", "customer", "scratch", "projects"]
+    
     models = load_keras_models()
     scalers = load_scalers()
 
@@ -384,7 +406,7 @@ async def retrain_all_daily_models():
     df.sort_values('timestamp', inplace=True)
 
     results = {}
-    for dir_name in DIRECTORIES:
+    for dir_name in directories:
         key = f"{dir_name}_daily"  # for accessing models and scalers
         dir_df = df[df["directory"] == f"/{dir_name}"].copy()
 
@@ -421,8 +443,8 @@ def retrain_weekly():
 @app.get("/predictions/weekly-line/{directory}")
 async def get_weekly_line_predictions(directory: str):
     # Check if the directory is valid
-    valid_directories = ["info", "scratch", "customer", "projects"]
-    if directory not in valid_directories:
+    
+    if directory not in directories:
         return JSONResponse({"error": "Invalid directory"}, status_code=400)
 
     model_name = f"{directory}_weekly"
@@ -522,8 +544,8 @@ async def get_overall_prediction_category(predictions: dict):
 @app.get("/predictions/monthly-line/{directory}")
 async def get_monthly_line_predictions(directory: str):
     # Check if the directory is valid
-    valid_directories = ["info", "scratch", "customer", "projects"]
-    if directory not in valid_directories:
+    
+    if directory not in directories:
         return JSONResponse({"error": "Invalid directory"}, status_code=400)
 
     # Model and scaler names for monthly predictions
@@ -557,8 +579,8 @@ async def get_monthly_line_predictions(directory: str):
 @app.get("/predictions/three-monthly-line/{directory}")
 async def get_monthly_line_predictions(directory: str):
     # Check if the directory is valid
-    valid_directories = ["info", "scratch", "customer", "projects"]
-    if directory not in valid_directories:
+    
+    if directory not in directories:
         return JSONResponse({"error": "Invalid directory"}, status_code=400)
 
     # Model and scaler names for monthly predictions
