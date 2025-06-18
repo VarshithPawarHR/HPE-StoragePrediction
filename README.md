@@ -63,7 +63,7 @@ cd HPE-Dashboard
 
 ### 2. Set Environment Variables
 
-Create a `.env.local` file:
+Create a `.env` file inside the HPE-Dashboard folder:
 
 ```bash
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/
