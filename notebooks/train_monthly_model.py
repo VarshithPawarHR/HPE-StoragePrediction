@@ -9,7 +9,7 @@ from sklearn.metrics import mean_squared_error
 from pymongo import MongoClient
 from typing import Dict, Tuple
 
-# Environment & MongoDB
+
 load_dotenv()
 mongo_url = os.getenv("MONGO_URL")
 if not mongo_url:
@@ -19,7 +19,6 @@ client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
 db = client["storage_simulation"]
 collection = db["usage_logs"]
 
-# Hyperparameters
 tf.keras.mixed_precision.set_global_policy('mixed_float16')
 HORIZONS = {'1_month': 180}
 SEQ_LENGTH = 42
