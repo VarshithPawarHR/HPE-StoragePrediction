@@ -153,7 +153,7 @@ def train_and_evaluate(data_dict: Dict, config: Dict) -> Tuple[Dict, Dict]:
     EPOCHS = config['EPOCHS']
 
     for name, data in data_dict.items():
-        print(f"\n⚡ Processing {name}")
+        print(f"\nProcessing {name}")
         df = data['data']
         scaler = data['scaler']
 
@@ -163,7 +163,7 @@ def train_and_evaluate(data_dict: Dict, config: Dict) -> Tuple[Dict, Dict]:
         split_idx = total_points - test_size
 
         if split_idx < SEQ_LENGTH:
-            print(f"⚠️ Insufficient data for {name}")
+            print(f"Insufficient data for {name}")
             continue
 
         # Create sequences
@@ -179,7 +179,7 @@ def train_and_evaluate(data_dict: Dict, config: Dict) -> Tuple[Dict, Dict]:
         )
 
         if len(X_train) == 0 or len(X_test) == 0:
-            print(f"🚫 Sequence creation failed for {name}")
+            print(f"Sequence creation failed for {name}")
             continue
 
         # Model setup and training
