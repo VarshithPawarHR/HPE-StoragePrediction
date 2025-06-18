@@ -24,11 +24,11 @@ pip install -r requirements.txt
 
 ### 3. Set Environment Variables
 
-Create a `.env` file inside the `backend` folder:
+Create a `.env` file inside the `backend` folder: (refer `.env.example`)
 
 ```bash
 TF_ENABLE_ONEDNN_OPTS=0
-MONGO_URL=mongodb://localhost:27017
+MONGO_URL=mongodb+srv://<username>:<password>@<cluster-url>/<database>
 MONGO_DB=your_db_name
 MONGO_COLLECTION=your_collection
 ```
@@ -63,7 +63,7 @@ cd HPE-Dashboard
 
 ### 2. Set Environment Variables
 
-Create a `.env` file inside the HPE-Dashboard folder:
+Create a `.env` file inside the HPE-Dashboard folder (refer `.env.example`):
 
 ```bash
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/
