@@ -24,7 +24,9 @@ for d in MODEL_DIRS:
 print("=== SCALER DIRECTORIES ===")
 for d in SCALER_DIRS:
     print(f"{d.exists()} - {d}")
+    
 
+# This script is used to load Keras models and scalers from specified directories.
 def load_keras_models():
     models = {}
     for model_dir in MODEL_DIRS:
@@ -40,6 +42,8 @@ def load_keras_models():
                 print(f"Error loading model {file.name}: {e}")
     return models
 
+
+# This script is used to load scalers from specified directories.
 def load_scalers():
     scalers = {}
     for scaler_dir in SCALER_DIRS:

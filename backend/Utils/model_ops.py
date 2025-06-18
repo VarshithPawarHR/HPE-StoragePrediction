@@ -16,6 +16,7 @@ SCALER_DIRS = [
 
 SEQUENCE_LENGTH = 96
 
+# This script is used to create sequences for single-step forecasting.
 def create_sequences_singlestep(data):
     X, y = [], []
     for i in range(len(data) - SEQUENCE_LENGTH):
@@ -24,6 +25,7 @@ def create_sequences_singlestep(data):
     return np.array(X), np.array(y)
 
 
+# This script is used to update Keras models with new data and evaluate their performance.
 def update_model_for_directory(dir_name, df, model, scaler, evaluate_only=False):
     print(f"🔁 Updating model for: {dir_name}")
     

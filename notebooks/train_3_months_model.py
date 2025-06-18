@@ -7,7 +7,6 @@ import os
 from dotenv import load_dotenv
 import tensorflow as tf
 from typing import Dict, Tuple
-import pymongo
 from pymongo import MongoClient
 
 # Load environment variables
@@ -45,7 +44,7 @@ def load_and_preprocess_data() -> Dict[str, dict]:
     raw_data = raw_data.drop(columns=['_id'])
     raw_data['timestamp'] = pd.to_datetime(raw_data['timestamp'])
 
-    print("\n🔍 Data Diagnostics:")
+    print("\nData Diagnostics:")
     print(f"Total records: {len(raw_data)}")
     print("Unique directories:", raw_data['directory'].unique())
 
@@ -141,7 +140,7 @@ def train_and_evaluate(data_dict: Dict) -> Tuple[Dict, Dict]:
     metrics = {}
 
     for name, data in data_dict.items():
-        print(f"\n⚡ Processing {name}")
+        print(f"\nProcessing {name}")
         df = data['data']
         scaler = data['scaler']
 
@@ -151,7 +150,7 @@ def train_and_evaluate(data_dict: Dict) -> Tuple[Dict, Dict]:
         split_idx = total_points - test_size
 
         if split_idx < SEQ_LENGTH:
-            print(f"⚠️ Insufficient data for {name}")
+            print(f"Insufficient data for {name}")
             continue
 
         # Create sequences
@@ -167,7 +166,7 @@ def train_and_evaluate(data_dict: Dict) -> Tuple[Dict, Dict]:
         )
 
         if len(X_train) == 0 or len(X_test) == 0:
-            print(f"🚫 Sequence creation failed for {name}")
+            print(f"Sequence creation failed for {name}")
             continue
 
         # Model setup and training
@@ -214,7 +213,7 @@ def train_and_evaluate(data_dict: Dict) -> Tuple[Dict, Dict]:
 
 def main():
     """Main execution function"""
-    print("🚀 Starting storage forecasting model training...")
+    print("Starting storage forecasting model training...")
 
     # Load and preprocess data
     data_dict = load_and_preprocess_data()
@@ -223,7 +222,7 @@ def main():
     models, metrics = train_and_evaluate(data_dict)
 
     # Print performance metrics
-    print("\n📊 TRAINING RESULTS")
+    print("\nTRAINING RESULTS")
     print("=" * 50)
 
     for directory in data_dict:
@@ -234,9 +233,9 @@ def main():
                     rmse = metrics[directory][horizon]['rmse']
                     print(f"  {horizon.replace('_', ' ').title():<12} RMSE: {rmse:.2f} GB")
 
-    print(f"\n✅ Training completed! Models and scalers saved successfully.")
-    print(f"📁 Models saved in: ./models/")
-    print(f"📁 Scalers saved in: ./scalers/")
+    print(f"\nTraining completed! Models and scalers saved successfully.")
+    print(f"Models saved in: ./models/")
+    print(f"Scalers saved in: ./scalers/")
 
 
 if __name__ == "__main__":
