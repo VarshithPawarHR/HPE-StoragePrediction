@@ -2,9 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
-from tensorflow.keras.callbacks import EarlyStopping
+import tensorflow as tf
 import joblib
 import os
 from dotenv import load_dotenv
@@ -40,13 +38,13 @@ def create_sequences_singlestep(data, sequence_length):
     return np.array(X), np.array(y)
 
 def build_lstm_model_singlestep(input_shape):
-    model = Sequential([
-        Input(shape=input_shape),
-        LSTM(64, return_sequences=True),
-        Dropout(0.25),
-        LSTM(32),
-        Dropout(0.2),
-        Dense(1)
+    model = tf.keras.Sequential([
+        tf.keras.layers.Input(shape=input_shape),
+        tf.keras.layers.LSTM(64, return_sequences=True),
+        tf.keras.layers.Dropout(0.25),
+        tf.keras.layers.LSTM(32),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(1)
     ])
     model.compile(optimizer='adam', loss='mse', metrics=['mae'])
     return model
@@ -66,7 +64,7 @@ def train_single_step_forecast_model(df, dir_name, sequence_length=96):
     input_shape = (X_train.shape[1], X_train.shape[2])
     model = build_lstm_model_singlestep(input_shape)
 
-    early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    early_stop =  tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     model.fit(
         X_train, y_train,
         validation_split=0.2,
