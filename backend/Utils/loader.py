@@ -5,7 +5,7 @@ import joblib
 from tensorflow import keras
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-NOTEBOOKS_DIR = BASE_DIR / "notebooks"
+NOTEBOOKS_DIR = BASE_DIR / "backend"
 
 MODEL_DIRS = [
     BASE_DIR / "models",
