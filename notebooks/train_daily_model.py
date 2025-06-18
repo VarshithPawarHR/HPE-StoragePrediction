@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from typing import Dict
 
+# Load environment and MongoDB
 load_dotenv()
-client = os.getenv("MONGO_URL")
-client = MongoClient(client)
+client = MongoClient(os.getenv("MONGO_URL"))
 db = client["storage_simulation"]
 collection = db["usage_logs"]
 
@@ -27,14 +27,16 @@ def load_and_preprocess_data() -> Dict[str, pd.DataFrame]:
         df = raw_data[raw_data['directory'] == directory].copy()
         df = df.sort_values('timestamp').set_index('timestamp')
         df = df[['storage_gb']]
-        processed[directory] = df
+        scaler = MinMaxScaler()
+        df['scaled_gb'] = scaler.fit_transform(df[['storage_gb']])
+        processed[directory] = df[['storage_gb']]
     return processed
 
 def create_sequences_singlestep(data, sequence_length):
     X, y = [], []
     for i in range(len(data) - sequence_length):
         X.append(data[i:i + sequence_length])
-        y.append(data[i + sequence_length])
+        y.append(data[i + sequence_length])  # Single-step prediction
     return np.array(X), np.array(y)
 
 def build_lstm_model_singlestep(input_shape):
@@ -88,18 +90,21 @@ def train_single_step_forecast_model(df, dir_name, sequence_length=96):
     print(f"{dir_name.upper()} - RMSE: {rmse:.2f} GB")
     print(f"{dir_name.upper()} - Normalized MAE: {nmae:.4f}")
     print(f"{dir_name.upper()} - Normalized RMSE: {nrmse:.4f}")
+    print("-" * 40)
 
     safe_name = dir_name.strip("/")
-
     models = os.path.abspath(os.path.join(os.getcwd(), '..', 'models'))
     os.makedirs(models, exist_ok=True)
     model.save(os.path.join(models, f"{safe_name}_daily_forecast_model.keras"))
 
     scalers = os.path.abspath(os.path.join(os.getcwd(), '..', 'scalers'))
     os.makedirs(scalers, exist_ok=True)
-    scaler_file_path = os.path.join(scalers, f"{safe_name}_daily_scaler.pkl")
-    joblib.dump(scaler, scaler_file_path)
+    joblib.dump(scaler, os.path.join(scalers, f"{safe_name}_daily_scaler.pkl"))
 
-data_dict = load_and_preprocess_data()
-for name, data in data_dict.items():
-    train_single_step_forecast_model(data, name)
+def main():
+    data_dict = load_and_preprocess_data()
+    for name, data in data_dict.items():
+        train_single_step_forecast_model(data, name)
+
+if __name__ == "__main__":
+    main()
