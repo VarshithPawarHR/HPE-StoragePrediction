@@ -1,5 +1,6 @@
+# This module sets up the MongoDB connection using Motor, an asynchronous driver for MongoDB.
+
 from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import DESCENDING
 from dotenv import load_dotenv
 import os
 

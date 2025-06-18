@@ -1,3 +1,5 @@
+# This script is used to update Keras models with new data and evaluate their performance.
+
 import numpy as np
 from math import sqrt
 from sklearn.metrics import mean_squared_error
@@ -32,7 +34,7 @@ def update_model_for_directory(dir_name, df, model, scaler, evaluate_only=False)
     X, y = create_sequences_singlestep(scaled_data)
 
     if len(X) == 0:
-        return f"⚠️ Not enough data to update model for {dir_name}"
+        return f"Not enough data to update model for {dir_name}"
 
     X = X.reshape((X.shape[0], SEQUENCE_LENGTH, 1))
     y = y.reshape(-1, 1)
@@ -54,7 +56,7 @@ def update_model_for_directory(dir_name, df, model, scaler, evaluate_only=False)
     ))
 
     if evaluate_only:
-        return f"📉 Pre-Retrain RMSE for {dir_name}: {rmse_before:.4f}"
+        return f"Pre-Retrain RMSE for {dir_name}: {rmse_before:.4f}"
 
     # Clone the model for safe training
     temp_model = tf.keras.models.clone_model(model)
@@ -74,8 +76,8 @@ def update_model_for_directory(dir_name, df, model, scaler, evaluate_only=False)
         model.set_weights(temp_model.get_weights())  # update original model
         model_path = MODEL_DIR / f"{dir_name}_daily_forecast_model.keras"
         model.save(model_path)
-        return (f"✅ Model retrained and saved for {dir_name} | "
+        return (f"Model retrained and saved for {dir_name} | "
                 f"RMSE: {rmse_before:.4f} → {rmse_after:.4f}")
     else:
-        return (f"❌ No improvement for {dir_name} | "
+        return (f"No improvement for {dir_name} | "
                 f"RMSE: {rmse_before:.4f} → {rmse_after:.4f} (skipped saving)")
