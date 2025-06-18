@@ -1,3 +1,5 @@
+# This script trains a single-step LSTM model for daily storage usage forecasting.
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -9,7 +11,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from typing import Dict
 
-# Load environment and MongoDB
+
 load_dotenv()
 client = MongoClient(os.getenv("MONGO_URL"))
 db = client["storage_simulation"]
@@ -34,7 +36,7 @@ def create_sequences_singlestep(data, sequence_length):
     X, y = [], []
     for i in range(len(data) - sequence_length):
         X.append(data[i:i + sequence_length])
-        y.append(data[i + sequence_length])  # Single-step prediction
+        y.append(data[i + sequence_length])
     return np.array(X), np.array(y)
 
 def build_lstm_model_singlestep(input_shape):

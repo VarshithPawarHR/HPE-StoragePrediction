@@ -1,91 +1,101 @@
-# Storage Forecasting HPE CPP project  – Proof of Concept (POC)
+# Setup Guide
+> 📌 **Note:** Before proceeding, make sure you have collected and populated the data into MongoDB **as specified in** [HPE-Data-Generator](https://github.com/VarshithPawarHR/HPE-Data-Generator/tree/main). This is required for the system to work correctly.
 
-## Read This First – Limitations & Scope
+## I. Backend
 
-This project is a **Proof of Concept** aimed at exploring **machine learning-based file storage prediction** for a specific internal storage system.
+### Requirements
 
-**The ML models built here are NOT direct to use or sell for systems.** You cannot expect them to work on just any storage setup. Machine Learning models are **context-specific** — they learn patterns from the system they're trained on.
+* Python **3.10**
+* MongoDB (local or cloud)
+* `pip` for installing Python packages
 
-**If you want accurate predictions for your environment, you need to refine this  model on your own data and then train** This project demonstrates what's possible, not what's universally applicable.
-
----
-
-## 🧠 What This Project Is
-
-This is a full-stack storage monitoring and forecasting dashboard that provides:
-
-- Real-time insights into current storage usage  
-- Forecasts for:
-  - 📅 Next Day  
-  - 📈 Next Week  
-  - 📆 Next Month  
-  - 📊 Next 3 Months
-- A sleek dashboard built with **Next.js** and **TypeScript**  
-- A backend powered by **FastAPI**, **MongoDB**, and **Hybrid Deep learning models** time series forecasting models
-
-This is a **research-grade POC**, not a production-ready tool or software .
-
----
-
-## 🌐 Frontend Overview
-
-The frontend is built using **Next.js** and **TypeScript**, offering:
-
-- Real-time visualizations of storage usage  
-- Prediction graphs for multiple time horizons  
-- Directory-level trend insights  
-- Auto-refresh every 15 minutes (if live data ingestion is running)
-
-To set up the frontend, see the `https://github.com/VarshithPawarHR/HPE-Dashboard`.
-
----
-
-## ⚙️ Backend Setup – FastAPI
-
-The backend handles:
-
-- Live data ingestion and synthetic data simulation  
-- Storage forecasting using hybrid models consisting of **LSTM**,**GRU**,**conv1D**  
-- API services consumed by the frontend  
-- MongoDB database integration
-
-### 🔧 Requirements
-
-- Python: **3.10.x**  
-- MongoDB: running locally or via cloud
-
-
-### Clone
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/VarshithPawarHR/HPE-StoragePrediction
-cd backend
-
+cd HPE-StoragePrediction/backend
 ```
 
-### Install dependencies
+### 2. Install Dependencies
 
 ```bash
-pip install -r backend/requirenments.txt
-
+pip install -r requirements.txt
 ```
-### Setup environmental Variables
+
+### 3. Set Environment Variables
+
+Create a `.env` file inside the `backend` folder: (refer `.env.example`)
 
 ```bash
 TF_ENABLE_ONEDNN_OPTS=0
-MONGO_URL =
-MONGO_DB = 
-MONGO_COLLECTION = 
-JUPYTER_PATH=notebooks
+MONGO_URL=mongodb+srv://<username>:<password>@<cluster-url>/<database>
+MONGO_DB=your_db_name
+MONGO_COLLECTION=your_collection
 ```
 
-### Run the backend
+### 4. Run the Backend
+
 ```bash
 fastapi dev main.py
 ```
 
-## 📄 License
+FastAPI will be live at: `http://127.0.0.1:8000/`
 
-This project is licensed under the MIT License.
+### Test API (Swagger UI)
 
-See the [LICENSE](./LICENSE) file for full details.
+Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to manually test the APIs.
+
+---
+
+## II. Frontend
+
+### Requirements
+
+* Node.js **v18**
+* A package manager (`npm` or `yarn`)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/VarshithPawarHR/HPE-Dashboard
+cd HPE-Dashboard
+```
+
+### 2. Set Environment Variables
+
+Create a `.env` file inside the HPE-Dashboard folder (refer `.env.example`):
+
+```bash
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/
+MONGO_URL=mongodb+srv://<username>:<password>@<cluster-url>/<database>
+MONGO_DB=your_db_name
+MONGO_COLLECTION=your_collection
+```
+
+### 3. Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### 4. Run the Frontend
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+Dashboard will be available at: `http://localhost:3000`
+
+---
+
+## Summary
+
+* **Backend** runs on `http://127.0.0.1:8000`
+* **Frontend** runs on `http://localhost:3000`
+* Connected via REST APIs
+
+Once both are running, navigate to the dashboard to view real-time storage forecasts.
