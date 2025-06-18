@@ -4,9 +4,6 @@ import os
 from dotenv import load_dotenv
 import joblib
 import tensorflow as tf
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, GRU, Dense, Dropout, Conv1D
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 from pymongo import MongoClient
@@ -64,15 +61,15 @@ def create_sequences(features: np.ndarray, targets: np.ndarray, seq_length: int,
         y.append(targets[i+seq_length:i+seq_length+horizon])
     return np.array(X), np.array(y)
 
-def build_model(input_shape: Tuple[int, int], output_steps: int) -> Model:
-    inputs = Input(shape=input_shape)
-    x = Conv1D(64, 3, activation='relu', padding='causal')(inputs)
-    x = GRU(128, return_sequences=True)(x)
-    x = GRU(64)(x)
-    x = Dense(128, activation='relu')(x)
-    x = Dropout(0.3)(x)
-    outputs = Dense(output_steps)(x)
-    model = Model(inputs, outputs)
+def build_model(input_shape: Tuple[int, int], output_steps: int) :
+    inputs = tf.keras.layers.Input(shape=input_shape)
+    x = tf.keras.layers.Conv1D(64, 3, activation='relu', padding='causal')(inputs)
+    x = tf.keras.layers.GRU(128, return_sequences=True)(x)
+    x = tf.keras.layers.GRU(64)(x)
+    x = tf.keras.layers.Dense(128, activation='relu')(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
+    outputs = tf.keras.layers.Dense(output_steps)(x)
+    model = tf.keras.Model(inputs, outputs)
     model.compile(optimizer=tf.keras.optimizers.Adam(0.001), loss='mse')
     return model
 
@@ -124,8 +121,8 @@ def train_and_evaluate(data_dict: Dict) -> None:
             epochs=EPOCHS,
             batch_size=BATCH_SIZE,
             callbacks=[
-                EarlyStopping(patience=7, restore_best_weights=True),
-                ModelCheckpoint(f'best_{name}.keras', save_best_only=True)
+                tf.keras.callbacks.EarlyStopping(patience=7, restore_best_weights=True),
+                tf.keras.callbacks. ModelCheckpoint(f'best_{name}.keras', save_best_only=True)
             ],
             verbose=0
         )
