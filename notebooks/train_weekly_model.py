@@ -18,7 +18,7 @@ def setup_environment():
     if not mongo_url:
         raise ValueError("MONGO_URL not set in .env")
 
-    client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+    client = MongoClient(mongo_url, serverSelectionTimeoutMS=100000)
     db = client["storage_simulation"]
     collection = db["usage_logs"]
 
