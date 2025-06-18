@@ -110,10 +110,9 @@ def save_model_and_scaler(model, scaler, name):
     safe_name = safe_name.replace('/', '_').replace('\\', '_')
     models_dir = os.path.join(current_dir, 'models')
     os.makedirs(models_dir, exist_ok=True)
-
     model_path = os.path.join(models_dir, f"{safe_name}_weekly_forecast_model.keras")
     model.save(model_path)
-    
+    print(f"Model saved at: {model_path}")
     scalers_dir = os.path.join(current_dir, 'scalers')
     os.makedirs(scalers_dir, exist_ok=True)
     scaler_path = os.path.join(scalers_dir, f"{safe_name}_weekly_scaler.pkl")
@@ -128,6 +127,8 @@ def train_and_evaluate(data_dict: Dict, config: Dict) -> Tuple[Dict, Dict]:
 
     HORIZONS = config['HORIZONS']
     SEQ_LENGTH = config['SEQ_LENGTH']
+    BATCH_SIZE = config['BATCH_SIZE']
+    EPOCHS = config['EPOCHS']
 
     for name, data in data_dict.items():
         print(f"\nProcessing {name}")
@@ -154,21 +155,38 @@ def train_and_evaluate(data_dict: Dict, config: Dict) -> Tuple[Dict, Dict]:
         if len(X_train) == 0 or len(X_test) == 0:
             print(f"Sequence creation failed for {name}")
             continue
+
         model = build_model((SEQ_LENGTH, 3), HORIZONS['1_week'])
         temp_checkpoint = f'best_{name}.keras'
+
+        history = model.fit(
+            X_train, y_train,
+            validation_data=(X_test, y_test),
+            epochs=EPOCHS,
+            batch_size=BATCH_SIZE,
+            callbacks=[
+                tf.keras.callbacks.EarlyStopping(patience=7, restore_best_weights=True),
+                tf.keras.callbacks.ModelCheckpoint(temp_checkpoint, save_best_only=True)
+            ],
+            verbose=1
+        )
+
         test_pred = model.predict(X_test)
         metrics[name] = {}
         for horizon_name, steps in HORIZONS.items():
             preds = test_pred[:, :steps].reshape(-1, 1)
             true = y_test[:, :steps].reshape(-1, 1)
+
             preds_gb = scaler.inverse_transform(preds).reshape(-1, steps)
             true_gb = scaler.inverse_transform(true).reshape(-1, steps)
             rmse = np.sqrt(mean_squared_error(true_gb, preds_gb))
+
             metrics[name][horizon_name] = {
                 'rmse': rmse,
                 'predictions': preds_gb[0],
                 'true': true_gb[0]
             }
+
         models[name] = model
         save_model_and_scaler(model, scaler, name)
         if os.path.exists(temp_checkpoint):
@@ -193,17 +211,25 @@ def print_performance_metrics(data_dict: Dict, metrics: Dict, config: Dict):
 def main():
     """Main execution function"""
     print(" Starting Storage Forecasting Model Training")
+
     collection = setup_environment()
     config = configure_training()
+
     print("\n Loading and preprocessing data...")
     data_dict = load_and_preprocess_data(collection)
 
     if not data_dict:
         print(" No data available for training")
         return
+
     print("\n Starting model training...")
     metrics = train_and_evaluate(data_dict, config)
+
+    print("\nTraining completed!")
     print_performance_metrics(data_dict, metrics, config)
+
+    print(f"\n Models and scalers saved successfully!")
+
 
 
 if __name__ == "__main__":
