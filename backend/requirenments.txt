@@ -13,3 +13,4 @@ motor
 db
 papermill
 nbconvert
+fastapi[standard]
