@@ -67,9 +67,7 @@ Create a `.env` file inside the HPE-Dashboard folder (refer `.env.example`):
 
 ```bash
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/
-MONGO_URL=mongodb+srv://<username>:<password>@<cluster-url>/<database>
-MONGO_DB=your_db_name
-MONGO_COLLECTION=your_collection
+
 ```
 
 ### 3. Install Dependencies
