@@ -13,7 +13,7 @@
 ### 1. Install Python
 Download and install Python from the official site:  
 🔗 [https://www.python.org/downloads/](https://www.python.org/downloads/)
-- Use **Python 3.10**, **3.11**, or **3.12**. TensorFlow does not yet support Python 3.13.
+- Use **Python 3.10** or **3.11**, or **3.12**. TensorFlow does not yet support Python 3.13.
 ### 2. Clone the Repository
 
 ```bash
