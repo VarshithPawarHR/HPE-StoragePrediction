@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.responses import JSONResponse
 
-
 # Import routers
 from api.directory_name import router as directory_name_router
 from api.summary import router as summary_router

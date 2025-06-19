@@ -12,3 +12,4 @@ async def get_recent_directories():
     # Extract only the directory names
     directories = [entry.get("directory") for entry in latest_entries]
     return {"recent_directories": directories}
+
