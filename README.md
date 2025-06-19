@@ -19,7 +19,7 @@ cd HPE-StoragePrediction/backend
 ### 2. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirenments.txt
 ```
 
 ### 3. Set Environment Variables
