@@ -18,7 +18,7 @@ Download and install Python from the official site:
 
 ```bash
 git clone https://github.com/VarshithPawarHR/HPE-StoragePrediction
-cd HPE-StoragePrediction/backend
+
 ```
 ### 3. Open Project in VS Code
 
@@ -32,7 +32,7 @@ cd HPE-StoragePrediction/backend
 - Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>
 - Select: `Python: Select Interpreter`
 - Choose a Python version between **3.10 – 3.12**
-- ❗ Avoid selecting **Python 3.13**
+- Avoid selecting **Python 3.13**
 
 
 
